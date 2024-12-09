@@ -10,3 +10,23 @@
     --radius: 0.5rem
   }
 }
+
+
+::-webkit-scrollbar-track
+{
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar
+{
+	width: 7px;
+	border-radius: 16px;
+}
+
+::-webkit-scrollbar-thumb
+{
+	border-radius: 16px;
+	background-color: #535353;
+}
+
+
