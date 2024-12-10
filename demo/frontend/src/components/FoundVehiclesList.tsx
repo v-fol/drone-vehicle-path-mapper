@@ -18,18 +18,29 @@ function FoundVehiclesList() {
 
   return (
     <>
-      {[...foundVehiclesImages].reverse().map((image, index) => {
-        if (index == foundVehiclesImages.length - 1) {
-          return <span key={index}></span>;
+      {[...foundVehiclesImages].map((_, index) => {
+        const reverseIndex = foundVehiclesImages.length - 1 - index; // Reverse the rendering order
+        const currentImage = foundVehiclesImages[reverseIndex];
+        if (reverseIndex === 0) {
+          return <span key={reverseIndex}></span>;
         } else {
           return (
-            <div key={index} className="flex justify-between p-2">
-                <div className="h-16 w-2 rounded-md" style={{backgroundColor: image.color}}/>
-                <span className="text-white mt-2">ID: {image.vehicle_id.replace(/\D/g, '')} Confidence {image.confidence * 100}%</span>
+            <div
+              key={reverseIndex}
+              className="flex justify-between p-2 bg-zinc-800 rounded-xl mt-3 "
+            >
+              <div
+                className="h-16 w-2 rounded-md"
+                style={{ backgroundColor: currentImage.color }}
+              />
+              <span className="text-white mt-5">
+                ID: {currentImage.vehicle_id.replace(/\D/g, "")} Confidence{" "}
+                {currentImage.confidence * 100}%
+              </span>
               <img
-                className="h-16  rounded-md"
-                src={getImageUrl(image.vehicle_id)}
-                alt={`Vehicle ${image.vehicle_id}`}
+                className="h-16 rounded-md"
+                src={getImageUrl(currentImage.vehicle_id)}
+                alt={`Vehicle ${currentImage.vehicle_id}`}
               />
             </div>
           );
