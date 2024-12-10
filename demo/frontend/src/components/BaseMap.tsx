@@ -4,7 +4,12 @@ import type { LayerProps } from "react-map-gl";
 import PathJson from "@/pathGEO.json";
 
 import { useAtom } from "jotai";
-import { isAnimatingAtom, visibleDataAtom, currentIndexAtom } from "@/atoms";
+import {
+  isAnimatingAtom,
+  visibleDataAtom,
+  currentIndexAtom,
+  mapStyleAtom,
+} from "@/atoms";
 import { foundVehiclesImagesAtom } from "@/atoms";
 
 import { Vehicle } from "@/types/global";
@@ -42,8 +47,10 @@ export default function BaseMap() {
   const [visibleData, setVisibleData] = useAtom(visibleDataAtom);
   const [currentIndex, setCurrentIndex] = useAtom(currentIndexAtom);
   const [isAnimating, setIsAnimating] = useAtom(isAnimatingAtom);
-  const [foundVehiclesImages, setFoundVehiclesImages] = useAtom(foundVehiclesImagesAtom);
-
+  const [foundVehiclesImages, setFoundVehiclesImages] = useAtom(
+    foundVehiclesImagesAtom
+  );
+  const [mapStyle] = useAtom(mapStyleAtom);
 
   useEffect(() => {
     if (!isAnimating) return;
@@ -66,26 +73,32 @@ export default function BaseMap() {
           ...prevData.features,
           sortedFeatures[currentIndex] as GeoJSON.Feature,
         ],
-        
       }));
 
-        if (foundVehiclesImages.length === 0) {
-            setFoundVehiclesImages([{
-                vehicle_id: sortedFeatures[currentIndex].properties.vehicle_id,
-                confidence: 0.9,
-                color: sortedFeatures[currentIndex].properties.color
-            }]);
-        }
-        const found = foundVehiclesImages.find(
-            (vehicle) => vehicle.vehicle_id === sortedFeatures[currentIndex].properties.vehicle_id
-        );
-        if (!found){
-                setFoundVehiclesImages([...foundVehiclesImages, {
-                    vehicle_id: sortedFeatures[currentIndex].properties.vehicle_id,
-                    confidence: 0.9,
-                    color: sortedFeatures[currentIndex].properties.color
-                }]);
-        }
+      if (foundVehiclesImages.length === 0) {
+        setFoundVehiclesImages([
+          {
+            vehicle_id: sortedFeatures[currentIndex].properties.vehicle_id,
+            confidence: 0.9,
+            color: sortedFeatures[currentIndex].properties.color,
+          },
+        ]);
+      }
+      const found = foundVehiclesImages.find(
+        (vehicle) =>
+          vehicle.vehicle_id ===
+          sortedFeatures[currentIndex].properties.vehicle_id
+      );
+      if (!found) {
+        setFoundVehiclesImages([
+          ...foundVehiclesImages,
+          {
+            vehicle_id: sortedFeatures[currentIndex].properties.vehicle_id,
+            confidence: 0.9,
+            color: sortedFeatures[currentIndex].properties.color,
+          },
+        ]);
+      }
 
       if (currentIndex < sortedFeatures.length - 1) {
         const currentTimestamp = new Date(
@@ -107,27 +120,24 @@ export default function BaseMap() {
     animatePoints();
   }, [isAnimating, currentIndex]);
 
-  
-
   return (
     <>
-      
-      <div className=" overflow-hidden rounded-xl ">
-      <Map
-        initialViewState={{
-          latitude: 48.26700476121383,
-          longitude: 25.914587449990563,
-          zoom: 14,
-        }}
-        style={{ width: "60vw", height: "80vh" }}
-        mapStyle="mapbox://styles/mapbox/light-v11"
-        mapboxAccessToken={MAPBOX_TOKEN}
-        interactiveLayerIds={["point"]} // Ensures hover only works for point layers
-      >
-        <Source type="geojson" data={visibleData}>
-          <Layer {...pointLayer} />
-        </Source>
-      </Map>
+      <div className=" overflow-hidden rounded-xl mr-2">
+        <Map
+          initialViewState={{
+            latitude: 48.267136,
+            longitude: 25.924092,
+            zoom: 14,
+          }}
+          style={{ width: "100vw", height: "80vh" }}
+          mapStyle={mapStyle}
+          mapboxAccessToken={MAPBOX_TOKEN}
+          interactiveLayerIds={["point"]} // Ensures hover only works for point layers
+        >
+          <Source type="geojson" data={visibleData}>
+            <Layer {...pointLayer} />
+          </Source>
+        </Map>
       </div>
     </>
   );
