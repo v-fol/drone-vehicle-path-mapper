@@ -29,8 +29,7 @@ const startingPoint = {
 
 PathJson.features.unshift(startingPoint);
 
-const MAPBOX_TOKEN =
-  "pk.eyJ1Ijoidi1mb2wiLCJhIjoiY200ZGFodnF6MGhuOTJqcXEyb2xnYmRkaSJ9.xfsfTN6pdty3AQk-g5Z5Nw";
+const MAPBOX_TOKEN = ""
 
 const pointLayer: LayerProps = {
   id: "point",
@@ -128,6 +127,8 @@ export default function BaseMap() {
             latitude: 48.267136,
             longitude: 25.924092,
             zoom: 14,
+            // pitch: 42,
+            //   bearing: -50,
           }}
           style={{ width: "100vw", height: "80vh" }}
           mapStyle={mapStyle}

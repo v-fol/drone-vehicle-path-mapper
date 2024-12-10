@@ -12,4 +12,6 @@ export const visibleDataAtom = atom<GeoJSON.FeatureCollection>({
   features: [],
 })
 
+export const selectedVehicleAtom = atom<string | null>(null)
+
 export const mapStyleAtom = atom<string>('mapbox://styles/mapbox/dark-v11')

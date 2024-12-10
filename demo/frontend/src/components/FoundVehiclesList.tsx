@@ -1,9 +1,15 @@
 import React from "react";
 import { useAtom } from "jotai";
 import { foundVehiclesImagesAtom } from "@/atoms";
+import PathJson from "@/pathGEO.json";
+
+import { visibleDataAtom, isAnimatingAtom, selectedVehicleAtom } from "@/atoms";
 
 function FoundVehiclesList() {
+  const [visible_data, setVisibleData] = useAtom(visibleDataAtom);
   const [foundVehiclesImages] = useAtom(foundVehiclesImagesAtom);
+  const [isAnimating] = useAtom(isAnimatingAtom);
+  const [selectedVehicle, setSelectedVehicle] = useAtom(selectedVehicleAtom);
 
   // Helper function to dynamically import images
   const getImageUrl = (vehicleId: string) => {
@@ -14,6 +20,17 @@ function FoundVehiclesList() {
       console.error(`Error loading image for vehicle ${vehicleId}:`, error);
       return ""; // or a fallback image URL
     }
+  };
+
+  const showPointsForVehicle = (vehicleId: string) => {
+    const features = PathJson.features.filter(
+      (feature) => feature.properties.vehicle_id === vehicleId
+    );
+
+    setVisibleData({
+      type: "FeatureCollection",
+      features: features as GeoJSON.Feature[],
+    });
   };
 
   return (
@@ -27,11 +44,28 @@ function FoundVehiclesList() {
           return (
             <div
               key={reverseIndex}
-              className="flex justify-between p-2 bg-zinc-800 rounded-xl mt-3 "
+              className={`flex justify-between p-2 mt-3 bg-zinc-800 rounded-xl mr-2 ${
+                !isAnimating ? "cursor-pointer hover:bg-zinc-700" : ""
+              } ${
+                selectedVehicle === currentImage.vehicle_id
+                  ? "!border-none bg-zinc-600 !border-zinc-500"
+                  : ""
+              }`}
+              style={{
+                background:
+                  isAnimating ||
+                  (!isAnimating && selectedVehicle === currentImage.vehicle_id)
+                    ? `linear-gradient(90deg, ${currentImage.color}30 6%, rgba(43, 43, 43, 1) 70%)`
+                    : "",
+              }}
+              onClick={() => {
+                !isAnimating && showPointsForVehicle(currentImage.vehicle_id);
+                setSelectedVehicle(currentImage.vehicle_id);
+              }}
             >
               <div
-                className="h-16 w-2 rounded-md"
-                style={{ backgroundColor: currentImage.color }}
+                className="h-16 w-2 ml-0.5 rounded-md"
+                style={{ backgroundColor: `${currentImage.color}` }}
               />
               <span className="text-white mt-5">
                 ID: {currentImage.vehicle_id.replace(/\D/g, "")} Confidence{" "}
