@@ -5,7 +5,6 @@ import cv2
 from preprocessing.drone_data import load_drone_data
 
 from detection.yolo import YOLODetector
-from detection.histogram import compute_color_histogram, compare_histograms
 
 from geoprocessing.coordinates import adjust_lat_long_with_direction
 from geoprocessing.map_utils import export_for_geo_json
@@ -24,8 +23,11 @@ class CarTracker:
         self.geo_paths = {}
         self.drone_data = load_drone_data(Config.DRONE_DATA_PATH)
         self.confidence_threshold = 0.8
-        self.max_similarity = 0.65
+        self.max_similarity = 0.7
+        self.close_to_frame_pixels = 20
+        self.image_padding = 20
         self.interested_class_ids = [2, 3, 4, 5, 8]
+        self.car_ids = []
         self.classes = {
             0: "boat",
             1: "bus",
@@ -108,7 +110,7 @@ class CarTracker:
                 yaw_changes.append(
                     abs(self.drone_data[i]["gb_yaw"] - self.drone_data[i - 1]["gb_yaw"])
                 )
-            if max(yaw_changes) > 3:
+            if max(yaw_changes) > 4:
                 displacement = 0
 
         new_lat, new_lon = adjust_lat_long_with_direction(
@@ -120,70 +122,6 @@ class CarTracker:
 
         return new_lat, new_lon
 
-    def find_similar_car(self, car_hist, look_for_last=5) -> tuple:
-        """
-        Find a similar car in the existing car histogram.
-
-        :param car_hist: The color histogram of the car
-        :param look_for_last: The number of last found cars to compare with
-        :return: A tuple containing a boolean indicating if a similar car was found and the ID of the car
-        """
-        car_found = False
-        car_id = None
-        simolarity_dict = {}
-
-        loop = 0
-        for existing_car_id, hist in reversed(self.car_histograms.items()):
-            if loop > look_for_last:
-                break
-            similarity = compare_histograms(car_hist, hist)
-            simolarity_dict[existing_car_id] = similarity
-            loop += 1
-
-        # if the similarity is higher than the threshold, assign the car ID
-        if len(simolarity_dict) > 0:
-            max_sim = max(simolarity_dict.values())
-            if max_sim > self.max_similarity:
-                car_id = max(simolarity_dict, key=simolarity_dict.get)
-                self.car_histograms[car_id] = car_hist
-                car_found = True
-        return car_found, car_id
-
-    def create_new_car(
-        self, car_id, car_hist, frame, x1, y1, x2, y2, car_image_path, padding=20
-    ) -> int:
-        """
-        Create a new car entry in the tracker.
-
-        :param car_id: The ID of the car
-        :param car_hist: The color histogram of the car
-        :param frame: The current frame
-        :param x1: The x-coordinate of the top-left corner of the car bounding box
-        :param y1: The y-coordinate of the top-left corner of the car bounding box
-        :param x2: The x-coordinate of the bottom-right corner of the car bounding box
-        :param y2: The y-coordinate of the bottom-right corner of the car bounding box
-        :param padding: The padding to add to the bounding
-        """
-        self.car_counter += 1
-        car_id = self.car_counter
-        # Make the box slightly bigger by adding padding
-        y1_pad = max(0, y1 - padding)
-        y2_pad = min(frame.shape[0], y2 + padding)
-        x1_pad = max(0, x1 - padding)
-        x2_pad = min(frame.shape[1], x2 + padding)
-        car_img = frame[y1_pad:y2_pad, x1_pad:x2_pad].copy()
-
-        # Save the image
-        filename = f"{car_image_path}/vehicle_{car_id}.jpg"
-        cv2.imwrite(filename, car_img)
-
-        self.car_histograms[car_id] = car_hist
-        self.car_colors[car_id] = (
-            np.random.randint(0, 255),
-            np.random.randint(0, 255),
-            np.random.randint(0, 255),
-        )
-        return car_id
 
     def generate_car_geo_json(
         self, car_id, lat, lon, confidence, drone_info, delay
@@ -235,7 +173,7 @@ class CarTracker:
 
         cap = cv2.VideoCapture(config.VIDEO_PATH)
 
-        detector = YOLODetector(config.YOLO_MODEL_PATH)
+        detector = YOLODetector(config.YOLO_MODEL_PATH, confidence_threshold=self.confidence_threshold)
 
         # Process video frames
         while cap.isOpened():
@@ -249,41 +187,55 @@ class CarTracker:
 
             drone_info = self.drone_data[frame_idx]
             detections = detector.detect_objects(frame)
+            
             box_index = 0
             for box in detections:
+                if not box.id:
+                    continue
+                
+                car_id = int(box.id[0])
                 x1, y1, x2, y2 = box.xyxy[
                     0
                 ]  # Extracting the coordinates from the detection box (xyxy format)
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                 class_id = box.cls[0]
+                # Skip the detection if it is too close to the frame
+                if x1 < self.close_to_frame_pixels or y1 < self.close_to_frame_pixels or x2 > frame.shape[1] - self.close_to_frame_pixels or y2 > frame.shape[0] - self.close_to_frame_pixels:
+                    continue
 
                 if class_id not in self.interested_class_ids:
                     continue  # Skip the class if it is not a vehicle
 
-                confidence = box.conf[0]
-                if float(confidence) < self.confidence_threshold:
-                    continue  # Skip the detection if the confidence is below the threshold
+                if car_id and car_id not in self.car_ids:
+                    y1_pad = max(0, y1 - self.image_padding)
+                    y2_pad = min(frame.shape[0], y2 + self.image_padding)
+                    x1_pad = max(0, x1 - self.image_padding)
+                    x2_pad = min(frame.shape[1], x2 + self.image_padding)
+                    car_img = frame[y1_pad:y2_pad, x1_pad:x2_pad].copy()
 
-                car_center = ((x1 + x2) // 2, (y1 + y2) // 2)
-                lat, lon = self.map_to_coordinates(
-                    car_center[0], car_center[1], frame_idx, drone_info
-                )
+                    # Save the image
+                    filename = f"{config.CAR_IMAGE_PATH}/vehicle_{car_id}.jpg"
+                    cv2.imwrite(filename, car_img)
 
-                # Compute the color histogram of the car
-                car_hist = compute_color_histogram(frame, (x1, y1, x2 - x1, y2 - y1))
-                car_found, car_id = self.find_similar_car(car_hist, look_for_last=3)
-
-                if not car_found:
-                    car_id = self.create_new_car(
-                        car_id, car_hist, frame, x1, y1, x2, y2, config.CAR_IMAGE_PATH, padding=20
+                    # self.car_histograms[car_id] = car_hist
+                    self.car_colors[car_id] = (
+                        np.random.randint(0, 255),
+                        np.random.randint(0, 255),
+                        np.random.randint(0, 255),
                     )
+                    self.car_ids.append(car_id)
+                    
+                
+                lat, lon = self.map_to_coordinates(
+                    (x1 + x2) // 2, (y1 + y2) // 2, frame_idx, drone_info
+                )
 
                 # Add the car's current position to the GeoJSON feature collection
                 self.generate_car_geo_json(
                     car_id,
                     lat,
                     lon,
-                    confidence,
+                    float(box.conf[0]),
                     drone_info,
                     delay= True if box_index == 0 else False, # add delay only to one point on the frame
                 )

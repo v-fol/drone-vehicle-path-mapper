@@ -3,7 +3,6 @@ import video from "../assets/video.mp4";
 import { useAtom } from "jotai";
 import { isAnimatingAtom, foundVehiclesImagesAtom } from "@/atoms";
 
-// import { useRef } from 'react'
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 function DroneFootageVideo() {
@@ -26,7 +25,7 @@ function DroneFootageVideo() {
           }}
           >
             <span className="text-white  text-2xl absolute left-0 right-0 m-auto w-fit top-0 bottom-0 h-fit opacity-40">
-              Restart animation to continue
+              Srart animation to continue
             </span>
             <video
               src={video}

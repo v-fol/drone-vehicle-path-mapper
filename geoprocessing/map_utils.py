@@ -12,6 +12,20 @@ def export_for_geo_json(car_paths: list, output_path: str, eps: float = 0.00001,
         f"Removed {len(car_paths) - len(removed_outliers)} outliers from {len(car_paths)} paths"
     )
 
+    car_counts = {}
+    for feature in removed_outliers:
+        car_id = feature['properties']['vehicle_id']
+        car_counts[car_id] = car_counts.get(car_id, 0) + 1
+
+    for car_id, count in car_counts.items():
+        print(f"Car {car_id} has {count} paths")
+
+    removed_outliers = [
+        feature for feature in removed_outliers 
+        if car_counts[feature['properties']['vehicle_id']] >= 5
+    ]
+    print(f'Cars found: {len(removed_outliers)}')
+
     for feature in removed_outliers:
         export_geo_format["features"].append(feature)
 
