@@ -24,6 +24,7 @@ const startingPoint = {
     vehicle_id: "Drone start",
     timestamp: "2024-12-09T17:38:03Z",
     color: "#04ED86",
+    frame_time : "2024-12-09T17:38:03Z",
   },
 };
 
