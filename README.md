@@ -52,3 +52,18 @@ To maintain vehicles signature in between frames I used a method called Histogra
 There is also a problem when an object is showed partialy in the frame but is detecded than this algoritm might generate two object ids. I fixed it by not creating ids when object is realy near to the frame. This might be bad for when you need to detect object that apear only partialy in the frame, but for this footage it worked fine.
 
 After I finished with this implementing this method I have found that ultralitics yolo models have support for ByteTrack and BoT-SORT multi-object tracking =) so I will implement those in the future.
+
+## Geoprocessing
+
+At first I used drone's latitude and longitude for vehicle coordinates, and for this scale it works fine. But I wanted to utilize the information we have in the SRT file about drone yaw and camera/shot info to make the path more close to the real world. My algorithm did okay but there still need to be done some improvements for situations when the drone is changing its yaw realy fast.
+
+I also tried diferent path optimization algoritms to remove coordinates that are more likely to be not acurate. The one that performed the best was DBSCAN (density-based spatial clustering of applications with noise). That removed sertain problems with previous algo.
+
+## Frontend Visualization
+
+For map visualization I tried a lot of solutions: kepler.gl, plotly, dash, folium. But did stick with Mapbox for 3 reasons.
+1) react library with a lot of customizations and low level support.
+2) fast maps api, with a lot of maps styles.
+3) good documuntation.
+
+The result you can see at `demo/frontend'
