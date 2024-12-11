@@ -11,6 +11,7 @@ import {
   mapStyleAtom,
 } from "@/atoms";
 import { foundVehiclesImagesAtom } from "@/atoms";
+import process from 'process';
 
 
 const startingPoint = {
@@ -31,7 +32,7 @@ const startingPoint = {
 
 PathJson.features.unshift(startingPoint);
 
-const MAPBOX_TOKEN = ""
+const MAPBOX_TOKEN = import.meta.env.VITE_APP_PUBLIC_MAPBOX_TOKEN as string;
 
 const pointLayer: LayerProps = {
   id: "point",

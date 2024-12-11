@@ -29,3 +29,6 @@ __pycache__
 car
 car/*
 pathsGEO.json
+.env
+parsedSRT.json
+video2.SRT

@@ -1,7 +1,6 @@
 import math
 
 
-
 def adjust_lat_long_with_direction(lat, lon, displacement, direction_deg):
     """
     Adjusts latitude and longitude by a displacement (in meters) in a specific direction.

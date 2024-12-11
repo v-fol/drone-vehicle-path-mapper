@@ -77,6 +77,8 @@ export default function Home() {
   };
 
   const forwardToEnd = () => {
+
+    console.log(PathJson.features.length);
     setVisibleData({
       type: "FeatureCollection",
       features: [...PathJson.features] as GeoJSON.Feature[],
