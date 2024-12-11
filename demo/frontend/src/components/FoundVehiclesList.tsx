@@ -4,7 +4,7 @@ import PathJson from "@/pathGEO.json";
 import { lightenColor } from "@/utils";
 
 import { useAtom, useSetAtom } from "jotai";
-import { visibleDataAtom, isAnimatingAtom, selectedVehicleAtom } from "@/atoms";
+import { visibleDataAtom, isAnimatingAtom, selectedVehicleAtom} from "@/atoms";
 
 function FoundVehiclesList() {
   const setVisibleData = useSetAtom(visibleDataAtom);

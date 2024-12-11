@@ -20,7 +20,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-import { useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import {
   isAnimatingAtom,
   visibleDataAtom,
@@ -49,13 +49,10 @@ const listOfthemes = [
 
 export default function Home() {
   const [parent] = useAutoAnimate();
-
-  const  setIsAnimating = useSetAtom(isAnimatingAtom);
-  const  setVisibleData = useSetAtom(visibleDataAtom);
-  const  setCurrentIndex = useSetAtom(currentIndexAtom);
-  const setFoundVehiclesImages = useSetAtom(
-    foundVehiclesImagesAtom
-  );
+  const [isAnimating, setIsAnimating] = useAtom(isAnimatingAtom);
+  const setVisibleData = useSetAtom(visibleDataAtom);
+  const setCurrentIndex = useSetAtom(currentIndexAtom);
+  const [foundVehiclesImages,setFoundVehiclesImages] = useAtom(foundVehiclesImagesAtom);
 
   const setSelectedVehicle = useSetAtom(selectedVehicleAtom);
 
@@ -75,7 +72,6 @@ export default function Home() {
   };
 
   const forwardToEnd = () => {
-
     console.log(PathJson.features.length);
     setVisibleData({
       type: "FeatureCollection",
@@ -114,20 +110,39 @@ export default function Home() {
     <>
       <div className="h-[96vh]">
         <div className="px-8 flex justify-between mb-4 pt-8">
-          <div className="flex gap-4">
+          <div ref={parent} className="flex gap-4">
             <button
-              className="bg-zinc-5 rounded-lg px-4 text-zinc-300 text-xs sm:text-base hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
+              disabled={isAnimating}
+              className="bg-zinc-5 h-10.5 rounded-lg px-4 text-zinc-300 text-xs sm:text-base hover:bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75 disabled:opacity-30 disabled:cursor-not-allowed hover:disabled:bg-[#131313] hover:disabled:text-zinc-300"
               onClick={restartAnimation}
             >
-              Restart Animation
+              Start Animation
+              <svg
+                className="inline-block ml-2"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z" />
+              </svg>
             </button>
             <button
-              className="bg-blac rounded-lg px-4 text-zinc-300 text-xs sm:text-base hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
+              disabled={!isAnimating}
+              className="bg-blac h-10.5 rounded-lg px-4 text-zinc-300 text-xs sm:text-base hover:bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75 disabled:opacity-30 disabled:cursor-not-allowed hover:disabled:bg-[#131313] hover:disabled:text-zinc-300"
               onClick={forwardToEnd}
             >
               Forward to the End
+              <svg
+                className="inline-block ml-2"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M5.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L5.58 7.11C4.91 6.65 4 7.12 4 7.93v8.14c0 .81.91 1.28 1.58.82zM13 7.93v8.14c0 .81.91 1.28 1.58.82l5.77-4.07c.56-.4.56-1.24 0-1.63l-5.77-4.07c-.67-.47-1.58 0-1.58.81z" />
+              </svg>
             </button>
-
             <Select onValueChange={(value) => setMapStyle(value)}>
               <SelectTrigger className="sm:w-[220px] w-20 mr-4 text-zinc-300 !bg-[#131313]  text-xs sm:text-base h-10.5 !bg rounded-lg !border-px !border-zinc-700 !border-opacity-75">
                 <SelectValue
@@ -176,7 +191,21 @@ export default function Home() {
             <ResizableHandle className="mx-1" />
             <ResizablePanel minSize={20} className="hidden sm:block">
               <div className="flex gap-2 flex-col ml-2  h-[80vh] ">
-                <DroneFootageVideo />
+                <span
+                  className={
+                    !isAnimating ? "cursor-pointer hover:opacity-75" : ""
+                  }
+                  onClick={() => {
+                    if (!isAnimating) {
+                      restartAnimation();
+                    }
+                  }}
+                >
+                  <DroneFootageVideo />
+                </span>
+                <span>
+                  length: {foundVehiclesImages.length}{" "}
+                </span>
                 <div
                   ref={parent}
                   className="h-full overflow-y-scroll overflow-x-hidden border-zinc-600"
