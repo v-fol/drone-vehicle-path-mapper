@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 *.mp4
+
+__pycache__
+*.pyc
+car
+car/*
+pathsGEO.json
+.env
+parsedSRT.json
+video2.SRT
