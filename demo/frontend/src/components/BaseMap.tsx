@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Map, Source, Layer } from "react-map-gl";
 import type { LayerProps } from "react-map-gl";
 import PathJson from "@/pathGEO.json";
@@ -12,7 +12,6 @@ import {
 } from "@/atoms";
 import { foundVehiclesImagesAtom } from "@/atoms";
 
-import { Vehicle } from "@/types/global";
 
 const startingPoint = {
   type: "Feature",
@@ -24,7 +23,9 @@ const startingPoint = {
     vehicle_id: "Drone start",
     timestamp: "2024-12-09T17:38:03Z",
     color: "#04ED86",
-    frame_time : "2024-12-09T17:38:03Z",
+    frame_time : "17:38:03:000",
+    confidence: "0.9",
+    delay: true
   },
 };
 
@@ -94,24 +95,33 @@ export default function BaseMap() {
           ...foundVehiclesImages,
           {
             vehicle_id: sortedFeatures[currentIndex].properties.vehicle_id,
-            confidence: 0.9,
+            confidence: parseFloat(sortedFeatures[currentIndex].properties.confidence),
             color: sortedFeatures[currentIndex].properties.color,
           },
         ]);
       }
 
-      if (currentIndex < sortedFeatures.length - 1) {
-        const currentTimestamp = new Date(
-          sortedFeatures[currentIndex].properties.timestamp
-        ).getTime();
-        const nextTimestamp = new Date(
-          sortedFeatures[currentIndex + 1].properties.timestamp
-        ).getTime();
-        const delay = nextTimestamp - currentTimestamp;
 
+
+      if (currentIndex < sortedFeatures.length - 1) {
+        // pasrse the time from the fram_time in format 17:38:03:000
+        const parseTimeString = (timeStr: string) => {
+            const [hours, minutes, seconds, milliseconds] = timeStr.split(':').map(Number);
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds, milliseconds).getTime();
+        };
+        const currentTimestamp = parseTimeString(sortedFeatures[currentIndex].properties.frame_time);
+        const nextTimestamp = parseTimeString(sortedFeatures[currentIndex + 1].properties.frame_time);
+        let delay : number;
+        if (sortedFeatures[currentIndex].properties.delay) {
+            delay = nextTimestamp - currentTimestamp;
+        }else{
+            delay = 0;
+        }
         setTimeout(() => {
-          setCurrentIndex((prevIndex) => prevIndex + 1);
+            setCurrentIndex((prevIndex) => prevIndex + 1);
         }, delay);
+
       } else {
         setIsAnimating(false);
       }

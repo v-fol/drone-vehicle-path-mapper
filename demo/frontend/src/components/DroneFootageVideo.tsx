@@ -21,14 +21,20 @@ function DroneFootageVideo() {
           </div>
         ) : (
           // show the video but pause it
-          <div className="w-full  bg-zinc-800 rounded-xl relative">
+          <div ref={parent} className="w-full bg-zinc-800 overflow-hidden rounded-xl relative"
+          style={{ 
+            height: foundVehiclesImages.length > 0 ? '60px' : 'auto'
+          }}
+          >
             <span className="text-white  text-2xl absolute left-0 right-0 m-auto w-fit top-0 bottom-0 h-fit opacity-40">
               Restart animation to continue
             </span>
             <video
               src={video}
-              style={{ opacity: 0.2 }}
-              className="w-full h-62 rounded-xl"
+              style={{ 
+                opacity: 0.2,
+              }}
+              className="w-full rounded-xl"
             />
           </div>
         )}

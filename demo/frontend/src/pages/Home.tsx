@@ -73,7 +73,7 @@ export default function Home() {
     setIsAnimating(false);
     setTimeout(() => {
       setIsAnimating(true);
-    }, 200);
+    }, 100);
   };
 
   const forwardToEnd = () => {
@@ -116,20 +116,20 @@ export default function Home() {
         <div className="px-8 flex justify-between mb-4 pt-8">
           <div className="flex gap-4">
             <button
-              className="bg-zinc-5 rounded-lg px-4 text-zinc-300 text-xs sm:text-md hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
+              className="bg-zinc-5 rounded-lg px-4 text-zinc-300 text-xs sm:text-base hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
               onClick={restartAnimation}
             >
               Restart Animation
             </button>
             <button
-              className="bg-blac rounded-lg px-4 text-zinc-300 text-xs sm:text-md hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
+              className="bg-blac rounded-lg px-4 text-zinc-300 text-xs sm:text-base hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
               onClick={forwardToEnd}
             >
               Forward to the End
             </button>
 
             <Select onValueChange={(value) => setMapStyle(value)}>
-              <SelectTrigger className="sm:w-[220px] w-20 mr-4 text-zinc-300 !bg-[#131313]  text-xs sm:text-md h-10.5 !bg rounded-lg !border-px !border-zinc-700 !border-opacity-75">
+              <SelectTrigger className="sm:w-[220px] w-20 mr-4 text-zinc-300 !bg-[#131313]  text-xs sm:text-base h-10.5 !bg rounded-lg !border-px !border-zinc-700 !border-opacity-75">
                 <SelectValue
                   className="text-zinc-300 "
                   placeholder="Select a map style"
@@ -151,7 +151,7 @@ export default function Home() {
             href="https://github.com/yourusername/your-repo"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-zinc-5 text-xs sm:text-md rounded-lg px-4 text-zinc-300 text-md hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
+            className="flex items-center gap-2 bg-zinc-5 text-xs sm:text-base rounded-lg px-4 text-zinc-300 hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
           >
             <svg
               height="24"

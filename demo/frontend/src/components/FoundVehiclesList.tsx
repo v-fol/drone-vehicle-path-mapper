@@ -3,6 +3,8 @@ import { useAtom } from "jotai";
 import { foundVehiclesImagesAtom } from "@/atoms";
 import PathJson from "@/pathGEO.json";
 
+import { lightenColor } from "@/utils";
+
 import { visibleDataAtom, isAnimatingAtom, selectedVehicleAtom } from "@/atoms";
 
 function FoundVehiclesList() {
@@ -26,6 +28,13 @@ function FoundVehiclesList() {
     const features = PathJson.features.filter(
       (feature) => feature.properties.vehicle_id === vehicleId
     );
+
+    // decries the opacity to show the direction of the path
+    var index = 0;
+    features.forEach((feature) => {
+        feature.properties.color = lightenColor(feature.properties.color, index);
+        index += 0.15;
+    });
 
     setVisibleData({
       type: "FeatureCollection",
@@ -69,7 +78,7 @@ function FoundVehiclesList() {
               />
               <span className="text-white mt-5">
                 ID: {currentImage.vehicle_id.replace(/\D/g, "")} Confidence{" "}
-                {currentImage.confidence * 100}%
+                {(currentImage.confidence * 100).toFixed(2)}%
               </span>
               <img
                 className="h-16 rounded-md"
