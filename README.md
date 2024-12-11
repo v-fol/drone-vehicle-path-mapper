@@ -8,7 +8,7 @@ The project is designed to detect and map the paths of vehicles using drone foot
 ## How It Works
 - **Preprocessing**: I used FFmpeg to preprocess the video, reducing its high bitrate and converting the SRT file into a JSON file using regex to extract relevant information about each frame.
 - **Detection**: The preprocessed data is fed into a YOLO-based object detection model to identify vehicles. I used YOLOv8 nano and small models trained on aerial road drone footage.
-- **Tracking**: Frame histograms are used to maintain vehicle identities.
+- **Tracking**: ByteTrack multi-object tracking computer vision algorithm is used to maintain vehicle identities.
 - **Geoprocessing**: To calculate vehicle coordinates, I employed several strategies based on the drone's position and the vehicle's position in the frame. Simplification algorithms were used to remove defective points.
 - **Frontend Visualization**: The processed data is visualized on a map using React with the Mapbox Maps library. This includes features such as real-time path prediction displayed alongside the video and the ability to examine individual vehicle paths.
 
@@ -47,11 +47,13 @@ I also tried to skip some amount of frames while using the models to make the pr
 
 ## Tracking
 
-To maintain vehicles signature in between frames I used a method called Histogram Comparison from opencv, wich worked preaty well. It has troubles if there are frames with many objects or when an object comes in or out of the shadow but generally we can detect most of the cars on the video.
+To maintain vehicles signature in between frames I used a method called Histogram Comparison from opencv, wich worked preaty well at first glance. It has troubles if there are frames with many objects or when an object comes in or out of the shadow but generally we can track most of the cars on the video.
 
 There is also a problem when an object is showed partialy in the frame but is detecded than this algoritm might generate two object ids. I fixed it by not creating ids when object is realy near to the frame. This might be bad for when you need to detect object that apear only partialy in the frame, but for this footage it worked fine.
 
-After I finished with this implementing this method I have found that ultralitics yolo models have support for ByteTrack and BoT-SORT multi-object tracking =) so I will implement those in the future.
+After I finished with this implementing this method I have found that ultralitics yolo models have support for ByteTrack and BoT-SORT multi-object tracking =)
+I changenged my aproach to work with ByteTrack multi-object tracking computer vision algorithm.
+This method did show much better results of persising car ids in chalanging conditions.
 
 ## Geoprocessing
 
