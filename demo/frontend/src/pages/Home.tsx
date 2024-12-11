@@ -52,7 +52,9 @@ export default function Home() {
   const [isAnimating, setIsAnimating] = useAtom(isAnimatingAtom);
   const setVisibleData = useSetAtom(visibleDataAtom);
   const setCurrentIndex = useSetAtom(currentIndexAtom);
-  const [foundVehiclesImages,setFoundVehiclesImages] = useAtom(foundVehiclesImagesAtom);
+  const [foundVehiclesImages, setFoundVehiclesImages] = useAtom(
+    foundVehiclesImagesAtom
+  );
 
   const setSelectedVehicle = useSetAtom(selectedVehicleAtom);
 
@@ -203,8 +205,9 @@ export default function Home() {
                 >
                   <DroneFootageVideo />
                 </span>
-                <span>
-                  length: {foundVehiclesImages.length}{" "}
+                <span className="text-gray-400 flex justify-between pr-4 w-full translate-y-2">
+                  <span>Vehicles Found</span>
+                  <span>{foundVehiclesImages.length} </span>
                 </span>
                 <div
                   ref={parent}
