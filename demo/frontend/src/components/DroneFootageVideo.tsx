@@ -25,7 +25,7 @@ function DroneFootageVideo() {
           }}
           >
             <span className="text-white  text-2xl absolute left-0 right-0 m-auto w-fit top-0 bottom-0 h-fit opacity-40">
-              Srart animation to continue
+              Start animation
             </span>
             <video
               src={video}
