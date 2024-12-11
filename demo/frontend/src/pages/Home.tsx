@@ -165,7 +165,7 @@ export default function Home() {
           </div>
 
           <a
-            href="https://github.com/yourusername/your-repo"
+            href="https://github.com/v-fol/drone-vehicle-path-mapper"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 bg-zinc-5 text-xs sm:text-base rounded-lg px-4 text-zinc-300 hover:!bg-zinc-200 hover:text-zinc-800 border border-1 border-zinc-700 border-opacity-75"
