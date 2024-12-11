@@ -1,4 +1,3 @@
-import React from "react";
 import video from "../assets/video.mp4";
 
 import { useAtom } from "jotai";
@@ -10,7 +9,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 function DroneFootageVideo() {
   const [isAnimating] = useAtom(isAnimatingAtom);
   const [foundVehiclesImages] = useAtom(foundVehiclesImagesAtom);
-  const [parent, enableAnimations] = useAutoAnimate();
+  const [parent] = useAutoAnimate();
 
   return (
     <>

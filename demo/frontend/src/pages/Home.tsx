@@ -1,4 +1,3 @@
-import React from "react";
 import BaseMap from "@/components/BaseMap";
 import FoundVehiclesList from "@/components/FoundVehiclesList";
 import DroneFootageVideo from "@/components/DroneFootageVideo";
@@ -11,7 +10,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -22,7 +20,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-import { useAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import {
   isAnimatingAtom,
   visibleDataAtom,
@@ -50,18 +48,18 @@ const listOfthemes = [
 ];
 
 export default function Home() {
-  const [parent, enableAnimations] = useAutoAnimate(/* optional config */);
+  const [parent] = useAutoAnimate();
 
-  const [isAnimating, setIsAnimating] = useAtom(isAnimatingAtom);
-  const [visibleData, setVisibleData] = useAtom(visibleDataAtom);
-  const [currentIndex, setCurrentIndex] = useAtom(currentIndexAtom);
-  const [foundVehiclesImages, setFoundVehiclesImages] = useAtom(
+  const  setIsAnimating = useSetAtom(isAnimatingAtom);
+  const  setVisibleData = useSetAtom(visibleDataAtom);
+  const  setCurrentIndex = useSetAtom(currentIndexAtom);
+  const setFoundVehiclesImages = useSetAtom(
     foundVehiclesImagesAtom
   );
 
-  const [selectedVehicle, setSelectedVehicle] = useAtom(selectedVehicleAtom);
+  const setSelectedVehicle = useSetAtom(selectedVehicleAtom);
 
-  const [mapStyle, setMapStyle] = useAtom(mapStyleAtom);
+  const setMapStyle = useSetAtom(mapStyleAtom);
 
   const restartAnimation = () => {
     setVisibleData({ type: "FeatureCollection", features: [] });

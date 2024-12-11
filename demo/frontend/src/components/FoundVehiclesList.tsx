@@ -1,14 +1,13 @@
-import React from "react";
-import { useAtom } from "jotai";
 import { foundVehiclesImagesAtom } from "@/atoms";
 import PathJson from "@/pathGEO.json";
 
 import { lightenColor } from "@/utils";
 
+import { useAtom, useSetAtom } from "jotai";
 import { visibleDataAtom, isAnimatingAtom, selectedVehicleAtom } from "@/atoms";
 
 function FoundVehiclesList() {
-  const [visible_data, setVisibleData] = useAtom(visibleDataAtom);
+  const setVisibleData = useSetAtom(visibleDataAtom);
   const [foundVehiclesImages] = useAtom(foundVehiclesImagesAtom);
   const [isAnimating] = useAtom(isAnimatingAtom);
   const [selectedVehicle, setSelectedVehicle] = useAtom(selectedVehicleAtom);

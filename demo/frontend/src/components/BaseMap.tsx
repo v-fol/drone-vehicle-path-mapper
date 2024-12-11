@@ -11,7 +11,6 @@ import {
   mapStyleAtom,
 } from "@/atoms";
 import { foundVehiclesImagesAtom } from "@/atoms";
-import process from 'process';
 
 
 const startingPoint = {
