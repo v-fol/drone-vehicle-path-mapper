@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "lapx>=0.5.11.post1",
     "numpy>=2.2.0",
     "opencv-python>=4.10.0.84",
     "scikit-learn>=1.6.0",
