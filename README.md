@@ -107,6 +107,15 @@ To launch the react app you need to install dependansies, I recomend [bun](https
 cd demo/frontend
 bun i
 ```
+You also need to get your token for Mapbox maps at - https://www.mapbox.com/
+
+Create a `.env` file in `demo/frontend` directory and paste the token as:
+
+```javascript
+VITE_APP_PUBLIC_MAPBOX_TOKEN="your public token"
+```
+And put your video as `video.mp4` at `demo/frontend/src/assets/`
+
 And than you can run:
 ```bash
 bun run dev
