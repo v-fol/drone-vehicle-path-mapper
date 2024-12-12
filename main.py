@@ -136,11 +136,6 @@ class CarTracker:
         :param drone_info: The drone information
 
         """
-        # if car_id not in self.car_geo_json_paths:
-        #     self.car_geo_json_paths[car_id] = {
-        #         "type": "FeatureCollection",
-        #         "features": [],
-        #     }
         self.car_geo_json_paths.append(
             {
                 "type": "Feature",
@@ -173,7 +168,7 @@ class CarTracker:
 
         cap = cv2.VideoCapture(config.VIDEO_PATH)
 
-        detector = YOLODetector(config.YOLO_MODEL_PATH, confidence_threshold=self.confidence_threshold)
+        detector = YOLODetector(config.YOLO_MODEL_PATH, conf_threshold=self.confidence_threshold)
 
         # Process video frames
         while cap.isOpened():
@@ -192,7 +187,7 @@ class CarTracker:
             for box in detections:
                 if not box.id:
                     continue
-                
+
                 car_id = int(box.id[0])
                 x1, y1, x2, y2 = box.xyxy[
                     0
@@ -235,7 +230,7 @@ class CarTracker:
                     car_id,
                     lat,
                     lon,
-                    float(box.conf[0]),
+                    box.conf[0],
                     drone_info,
                     delay= True if box_index == 0 else False, # add delay only to one point on the frame
                 )
