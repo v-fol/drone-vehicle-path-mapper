@@ -31,35 +31,33 @@ The SRT file was transformet with regex python script `parce_srt.py` to json.
 
 ## Detection
 
-For the first version I tried general yolov8 models, witch worked preaty good right of the box for general detection but had a lot of problems with detecting vehicles in chalanging situations like shadows or vehicles with sunroofs and where giving a lot of false detections, detecting houses, bus stops, trees as cars.
-######
-So naturaly came to a conclusion to train those models on a dataset of areal drone vehicles/trafic footage.
-######
-I used a dataset from https://universe.roboflow.com/irem69/hep7/dataset/7 with 3000 images a 70% training, 20% validation and 10% testing split.
+For the first version, I used general YOLOv8 models, which worked pretty well right out of the box for general detection. However, they struggled in challenging situations, such as detecting vehicles in shadows, vehicles with sunroofs, or in scenarios with a lot of false positives—misidentifying houses, bus stops, and trees as cars.
 
-At first I trained the the nano version of yolo8 with 50 epoches (runs).
-And after trained small model with 21 and 33 epoches. Sample command:
+Naturally, I concluded that training these models on a specialized dataset of aerial drone footage featuring vehicles and traffic would improve performance.
+
+I used a dataset from [Roboflow](https://universe.roboflow.com/irem69/hep7/dataset/7), consisting of 3,000 images with a 70% training, 20% validation, and 10% testing split.
+
+Initially, I trained the nano version of YOLOv8 with 50 epochs (runs). After that, I trained the small model with 21 and 33 epochs. Sample command:
 ```bash
 yolo task=detect mode=train model=yolov8n.pt data=data.yaml epochs=50 imgsz=640
 ```
-Bouth models showed significant improvment in detection, with the last one (small 33 epoches) showing the best result in terms of not detection outliers. Although the nano version is also great considering it uses 3 times less resources to process a frame. 
+Both models showed significant improvement in detection, with the last one (small, 33 epochs) delivering the best results in terms of minimizing detection outliers. However, the nano version is also impressive, considering it uses three times fewer resources to process a frame.
 
-I also tried to skip some amount of frames while using the models to make the process fasted but it negativly impacted detection.
+I also experimented with skipping some frames while using the models to speed up the process, but this negatively impacted detection accuracy.
 
 
 ## Tracking
 
-To maintain vehicles signature in between frames I used a method called Histogram Comparison from opencv, wich worked preaty well at first glance. It has troubles if there are frames with many objects or when an object comes in or out of the shadow but generally we can track most of the cars on the video.
+To maintain vehicle signatures between frames, I used the Histogram Comparison method from OpenCV, which worked well initially. However, it encountered difficulties when frames contained many objects or when objects moved in and out of shadows. Despite these challenges, we could track most cars in the video.
 
-There is also a problem when an object is showed partialy in the frame but is detecded than this algoritm might generate two object ids. I fixed it by not creating ids when object is realy near to the frame. This might be bad for when you need to detect object that apear only partialy in the frame, but for this footage it worked fine.
+Another issue arose when objects appeared partially in the frame but were still detected - this algorithm would sometimes generate duplicate object IDs. I addressed this by preventing ID creation for objects very close to the frame edge. While this solution might not be ideal for cases where detecting partially visible objects is necessary, it worked well for this footage.
 
-After I finished with this implementing this method I have found that ultralitics yolo models have support for ByteTrack and BoT-SORT multi-object tracking =)
-I changenged my aproach to work with ByteTrack multi-object tracking computer vision algorithm.
-This method did show much better results of persising car ids in chalanging conditions.
+After implementing this method, I discovered that Ultralytics YOLO models support ByteTrack and BoT-SORT multi-object tracking =).
+I then modified my approach to use ByteTrack, which demonstrated significantly better results in maintaining car IDs under challenging conditions.
 
 ## Geoprocessing
 
-At first I used drone's latitude and longitude for vehicle coordinates, and for this scale it works fine. But I wanted to utilize the information we have in the SRT file about drone yaw and camera/shot info to make the path more close to the real world. My algorithm did okay but there still need to be done some improvements for situations when the drone is changing its yaw realy fast.
+At first I used drones latitude and longitude for vehicle coordinates, and for this scale it works fine. But I wanted to utilize the information we have in the SRT file about drone yaw and camera/shot info to make the path more close to the real world. My algorithm did okay but there still need to be done some improvements for situations when the drone is changing its yaw really fast.
 
 I also tried diferent path optimization algoritms to remove coordinates that are more likely to be not acurate. The one that performed the best was DBSCAN (density-based spatial clustering of applications with noise). That removed sertain problems with previous algo.
 
@@ -70,4 +68,55 @@ For map visualization I tried a lot of solutions: kepler.gl, plotly, dash, foliu
 2) fast maps api, with a lot of maps styles.
 3) good documuntation.
 
-The result you can see at `demo/frontend'
+The app is build with react + vite + typescript + jotai + tailwindcss + shadcn.
+
+The result you can see at `demo/frontend`
+
+## Usage
+
+To run this project you need to install dependencies using [uv](https://docs.astral.sh/uv/getting-started/installation/):
+```bash
+uv sync
+```
+Transform the SRT file with parse_srt.py, witch will generate a json file.
+```bash
+python3 parse_srt.py
+```
+
+Than go to `config.py` and change necessary variables, like video source:
+```python
+class Config:
+    YOLO_MODEL_PATH = './runs/detect/train_small_33epochs/weights/best.pt'
+    DRONE_DATA_PATH = 'parsedSRT.json'
+    VIDEO_PATH = 'video.mp4' # your video
+    GEOJSON_OUTPUTPATH = './demo/frontend/src/pathGEO.json'
+    CAR_IMAGE_PATH = './demo/frontend/src/assets/car'
+```
+Important here is the video path/name of the file, you can leave everything else.
+
+After this you can run:
+```bash
+python3 main.py 
+```
+wich will generate images and GEOJSON files in frontend folder.
+
+To launch the react app you need to install dependansies, I recomend [bun](https://bun.sh/docs/installation) for this:
+```bash
+cd demo/frontend
+bun i
+```
+And than you can run:
+```bash
+bun run dev
+```
+and open the react app with the map at `http://localhost:5173/`
+
+##  Technologies, links
+
+- https://github.com/ultralytics/ultralytics 
+- https://github.com/ifzhang/ByteTrack
+- https://github.com/visgl/react-map-gl
+- https://www.mapbox.com/
+- https://scikit-learn.org/stable/
+
+
