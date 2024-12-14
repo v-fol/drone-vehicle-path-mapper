@@ -15,15 +15,12 @@ from config import Config
 
 class CarTracker:
     def __init__(self):
-        self.car_counter = 0
-        self.car_histograms = {}
         self.car_geo_paths = {}
         self.car_geo_json_paths = []
         self.car_colors = {}
-        self.geo_paths = {}
         self.drone_data = load_drone_data(Config.DRONE_DATA_PATH)
         self.confidence_threshold = 0.8
-        self.max_similarity = 0.7
+        self.iou_threshold = 0.9
         self.close_to_frame_pixels = 20
         self.image_padding = 20
         self.interested_class_ids = [2, 3, 4, 5, 8]
@@ -212,7 +209,6 @@ class CarTracker:
                     filename = f"{config.CAR_IMAGE_PATH}/vehicle_{car_id}.jpg"
                     cv2.imwrite(filename, car_img)
 
-                    # self.car_histograms[car_id] = car_hist
                     self.car_colors[car_id] = (
                         np.random.randint(0, 255),
                         np.random.randint(0, 255),
@@ -243,7 +239,7 @@ class CarTracker:
 
 
         # Save the GeoJSON data
-        export_for_geo_json(self.car_geo_json_paths, config.GEOJSON_OUTPUTPATH)
+        export_for_geo_json(self.car_geo_json_paths, config.GEOJSON_OUTPUT_PATH)
 
         cap.release()  # Release the video capture object
 

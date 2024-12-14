@@ -3,7 +3,6 @@ from sklearn.cluster import DBSCAN
 
 
 def douglas_peucker(features, tolerance):
-
     if len(features) < 3:
         return features  # Cannot simplify further
 
