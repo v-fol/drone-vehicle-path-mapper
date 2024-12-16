@@ -8,6 +8,13 @@ from typing import List, Dict
 def parse_srt(filename: str) -> List[Dict]:
     """
     Parse an SRT file and extract frame data into a list of dictionaries.
+
+    Args:
+        filename (str): Path to the SRT file
+    
+    Returns:
+        List[Dict]: List of dictionaries containing frame data
+    
     """
     data_list = []
     with open(filename, "r", encoding="utf-8") as file:
