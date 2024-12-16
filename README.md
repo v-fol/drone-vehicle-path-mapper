@@ -45,7 +45,7 @@ yolo task=detect mode=train model=yolov8n.pt data=data.yaml epochs=50 imgsz=640
 ```
 Both models showed significant improvement in detection, with the last one (small, 33 epochs) delivering the best results in terms of minimizing detection outliers. However, the nano version is also impressive, considering it uses three times fewer resources to process a frame.
 
-After this I trained the yolo v11 models in google colab with bigger trained image resolution (imgsz parameter). The idea was that for images like areal futage higher resolution frames can improve performance as there will be more detail of the object for the model to capture. Wiht image size increased to 1024 the results where more reliable than with the 640 px.
+After this I trained the yolo v11 models in google colab with bigger trained image resolution (imgsz parameter). The idea was that for images like areal futage higher resolution frames can improve performance as there will be more detail of the object for the model to capture. With image size increased to 1024 the results where more reliable than with the 640 px.
 
 I also experimented with skipping some frames while using the models to speed up the process, but this negatively impacted detection accuracy.
 
