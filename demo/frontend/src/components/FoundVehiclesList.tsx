@@ -16,7 +16,7 @@ function FoundVehiclesList() {
   const getImageUrl = (vehicleId: string) => {
     try {
       // Using dynamic import for images
-      return new URL(`../assets/car/${vehicleId}.jpg`, import.meta.url).href;
+      return new URL(`../assets/images/vehicles/${vehicleId}.jpg`, import.meta.url).href;
     } catch (error) {
       console.error(`Error loading image for vehicle ${vehicleId}:`, error);
       return ""; // or a fallback image URL
