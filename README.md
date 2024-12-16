@@ -11,7 +11,7 @@ Preview - [Demo](https://farsight-vision-demo.dream-jobs.com.ua/)
 
 ## How It Works
 - **Preprocessing**: I used FFmpeg to preprocess the video, reducing its high bitrate and converting the SRT file into a JSON file using regex to extract relevant information about each frame.
-- **Detection**: The preprocessed data is fed into a YOLO-based object detection model to identify vehicles. I used YOLOv8 nano and small models trained on aerial road drone footage.
+- **Detection**: The preprocessed data is fed into a YOLO-based object detection model to identify vehicles. I used YOLOv8 and YOLOv11 models trained on aerial road drone footage.
 - **Tracking**: ByteTrack multi-object tracking computer vision algorithm is used to maintain vehicle identities.
 - **Geoprocessing**: To calculate vehicle coordinates, I employed several strategies based on the drone's position and the vehicle's position in the frame. Simplification algorithms were used to remove defective points.
 - **Frontend Visualization**: The processed data is visualized on a map using React with the Mapbox Maps library. This includes features such as real-time path prediction displayed alongside the video and the ability to examine individual vehicle paths.
@@ -45,8 +45,9 @@ yolo task=detect mode=train model=yolov8n.pt data=data.yaml epochs=50 imgsz=640
 ```
 Both models showed significant improvement in detection, with the last one (small, 33 epochs) delivering the best results in terms of minimizing detection outliers. However, the nano version is also impressive, considering it uses three times fewer resources to process a frame.
 
-I also experimented with skipping some frames while using the models to speed up the process, but this negatively impacted detection accuracy.
+After this I trained the yolo v11 models in google colab with bigger trained image resolution (imgsz parameter). The idea was that for images like areal futage higher resolution frames can improve performance as there will be more detail of the object for the model to capture. Wiht image size increased to 1024 the results where more reliable than with the 640 px.
 
+I also experimented with skipping some frames while using the models to speed up the process, but this negatively impacted detection accuracy.
 
 ## Tracking
 
