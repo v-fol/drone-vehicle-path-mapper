@@ -4,7 +4,16 @@ from .simplification import remove_outliers_with_dbscan
 
 def export_for_geo_json(
     car_paths: list, output_path: str, eps: float = 0.00001, min_samples: int = 3
-):
+) -> None:
+    """
+    Export car paths to a GeoJSON file after removing outliers using DBSCAN.
+
+    Args:
+        car_paths (list): List of GeoJSON feature dictionaries representing car paths
+        output_path (str): Path to the output GeoJSON file
+        eps (float): Maximum distance between two points to be considered in the same neighborhood
+        min_samples (int): Minimum number of points to form a cluster
+    """
     export_geo_format = {"type": "FeatureCollection", "features": []}
 
     removed_outliers = remove_outliers_with_dbscan(

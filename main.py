@@ -15,16 +15,12 @@ from config import Config
 
 class CarTracker:
     def __init__(self):
+        self.cap = cv2.VideoCapture(Config.VIDEO_PATH)
         self.car_geo_paths = {}
         self.car_geo_json_paths = []
         self.car_colors = {}
-        self.drone_data = load_drone_data(Config.DRONE_DATA_PATH)
-        self.confidence_threshold = 0.8
-        self.iou_threshold = 0.9
-        self.close_to_frame_pixels = 20
-        self.image_padding = 20
-        self.interested_class_ids = [2, 3, 4, 5, 8]
         self.car_ids = []
+        self.drone_data = load_drone_data(Config.DRONE_DATA_PATH)
         self.classes = {
             0: "boat",
             1: "bus",
@@ -36,39 +32,51 @@ class CarTracker:
             7: "truck",
             8: "uai",
             9: "uap",
-        }
+        }  # class ids from the yolo model (detector.model.names)
+
+    def __enter__(self):
+        clear_directory(Config.CAR_IMAGE_PATH)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.car_geo_json_paths:
+            export_for_geo_json(self.car_geo_json_paths, Config.GEOJSON_OUTPUT_PATH)
+        self.cap.release()
 
     def map_to_coordinates(
         self,
-        x,
-        y,
-        frame_idx,
-        drone_info,
-        resolution_width=1920,
-        resolution_height=1080,
-        aspect_ratio=16 / 9,
+        x: int,
+        y: int,
+        frame_idx: int,
+        drone_info: dict,
     ) -> tuple:
         """
         Map the pixel coordinates of a car to its corresponding latitude and longitude.
 
-        :param x: The x-coordinate of the car
-        :param y: The y-coordinate of the car
-        :param frame_idx: The index of the current frame
-        :param drone_info: The drone information
-        :param resolution_width: The width of the frame in pixels
-        :param resolution_height: The height of the frame in pixels
-        :param aspect_ratio: The aspect ratio of the frame
-        :return: A tuple containing the latitude and longitude of the car
+        Args:
+            x: The x-coordinate of the car
+            y: The y-coordinate of the car
+            frame_idx: The index of the current frame
+            drone_info: The drone information
+        Returns:
+            tuple: The latitude and longitude of the car
         """
 
         drone_lat = drone_info["latitude"]
         drone_lon = drone_info["longitude"]
         altitude = drone_info["abs_alt"]  # Absolute altitude in meters
         focal_length = drone_info["focal_len"]  # Focal length in mm
-        gb_yaw = drone_info["gb_yaw"]
+        gb_yaw = (
+            drone_info["gb_yaw"] + 180
+        )  # Gimbal yaw in degrees (0 - 360), we add 180 to convert it to absolute value
 
-        sensor_width = 6  # mm
-        sensor_height = sensor_width / aspect_ratio  # mm (aspect ratio = 16:9)
+        if gb_yaw not in range(0, 360):
+            raise ValueError("Gimbal yaw should be in the range of 0-360 degrees")
+
+        sensor_width = Config.SENSOR_WIDTH
+        sensor_height = sensor_width / (
+            Config.CAMERA_RESOLUTION_WIDTH / Config.CAMERA_RESOLUTION_HEIGHT
+        )
 
         # Calculate the horizontal and vertical FOVs (in radians)
         fov_horizontal = 2 * math.atan(sensor_width / (2 * focal_length))
@@ -79,12 +87,12 @@ class CarTracker:
         ground_height = 2 * (altitude * math.tan(fov_vertical / 2))  # in meters
 
         # Calculate the pixel-to-meter conversion factor
-        pixel_to_meter_x = ground_width / resolution_width
-        pixel_to_meter_y = ground_height / resolution_height
+        pixel_to_meter_x = ground_width / Config.CAMERA_RESOLUTION_WIDTH
+        pixel_to_meter_y = ground_height / Config.CAMERA_RESOLUTION_HEIGHT
 
         # Calculate the center of the image (in pixels)
-        center_x = resolution_width / 2
-        center_y = resolution_height / 2
+        center_x = Config.CAMERA_RESOLUTION_WIDTH / 2
+        center_y = Config.CAMERA_RESOLUTION_HEIGHT / 2
 
         # Calculate the displacement in pixels (relative to center)
         displacement_x_pixels = x - center_x
@@ -95,43 +103,46 @@ class CarTracker:
         displacement_y_meters = displacement_y_pixels * pixel_to_meter_y
 
         # Calculate the straight-line displacement (Euclidean distance)
-        displacement = math.sqrt(
-            displacement_x_meters ** 2 + displacement_y_meters ** 2
-        )
+        displacement = math.sqrt(displacement_x_meters**2 + displacement_y_meters**2)
 
-        # if the yaw for the last 10 frames did cahge more than 10 degrees we need to reset the displacement
-        frame_range = 10
-        if frame_idx > frame_range:
+        # If the yaw for the last M frames did cahge more than N degrees we reset the displacement
+        # to avoid dispacement when the drone is rotating fast
+        if frame_idx > Config.DISPLACEMENT_FRAME_COUNT_THRESHOLD:
             yaw_changes = []
-            for i in range(frame_idx - frame_range, frame_idx):
+            for i in range(
+                frame_idx - Config.DISPLACEMENT_FRAME_COUNT_THRESHOLD, frame_idx
+            ):
                 yaw_changes.append(
                     abs(self.drone_data[i]["gb_yaw"] - self.drone_data[i - 1]["gb_yaw"])
                 )
-            if max(yaw_changes) > 4:
+            if max(yaw_changes) > Config.DISPLACEMENT_YAW_THRESHOLD:
                 displacement = 0
 
         new_lat, new_lon = adjust_lat_long_with_direction(
-            drone_lat,
-            drone_lon,
-            displacement,
-            gb_yaw + 180,  # 180 is added to convert the drone value to absolute value
+            drone_lat, drone_lon, displacement, gb_yaw
         )
 
         return new_lat, new_lon
 
-
     def generate_car_geo_json(
-        self, car_id, lat, lon, confidence, drone_info, delay
+        self,
+        car_id: int,
+        lat: float,
+        lon: float,
+        confidence: float,
+        drone_info: dict,
+        delay: bool,
     ) -> None:
         """
         Generate GeoJSON data for a car's current position, wich is used in Mapbox visualization.
 
-        :param car_id: The ID of the car
-        :param lat: The latitude of the car
-        :param lon: The longitude of the car
-        :param confidence: The confidence of the detection
-        :param drone_info: The drone information
-
+        Args:
+            car_id: The ID of the car
+            lat: The latitude of the car
+            lon: The longitude of the car
+            confidence: The confidence score of the detection
+            drone_info: The drone information
+            delay: Whether to add a delay to the car's position dot
         """
         self.car_geo_json_paths.append(
             {
@@ -148,7 +159,53 @@ class CarTracker:
             }
         )
 
-    def run_recognition(self):
+    def save_vehicle_image(self, car_id: int, car_img: np.ndarray) -> None:
+        """
+        Save the image of a found vehicle to the disk.
+
+        Args:
+            car_id: The ID of the vehicle
+            car_img: The image of the vehicle
+        """
+        filename = f"{Config.CAR_IMAGE_PATH}/vehicle_{car_id}.jpg"
+        cv2.imwrite(filename, car_img)
+
+    def create_vehicle_entry(
+        self,
+        car_id: int,
+        frame: np.ndarray,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+    ) -> None:
+        """
+        Create and add to the tracker a new entry for a vehicle that has been detected.
+
+        Args:
+            car_id: The ID of the vehicle
+            frame: The current frame
+            x1: The x-coordinate of the top-left corner of the vehicle bounding box
+            y1: The y-coordinate of the top-left corner of the vehicle bounding box
+            x2: The x-coordinate of the bottom-right corner of the vehicle bounding box
+            y2: The y-coordinate of the bottom-right corner of the vehicle bounding
+        """
+        y1_pad = max(0, y1 - Config.IMAGE_PADDING)
+        y2_pad = min(frame.shape[0], y2 + Config.IMAGE_PADDING)
+        x1_pad = max(0, x1 - Config.IMAGE_PADDING)
+        x2_pad = min(frame.shape[1], x2 + Config.IMAGE_PADDING)
+        car_img = frame[y1_pad:y2_pad, x1_pad:x2_pad].copy()
+
+        self.save_vehicle_image(car_id, car_img)
+
+        self.car_colors[car_id] = (
+            np.random.randint(0, 255),
+            np.random.randint(0, 255),
+            np.random.randint(0, 255),
+        )
+        self.car_ids.append(car_id)
+
+    def run_recognition(self, detector: YOLODetector) -> None:
         """
         Run the car recognition pipeline
         In this pipeline, we process the video frames and detect cars using YOLO.
@@ -157,66 +214,45 @@ class CarTracker:
         If a similar car is not found, we create a new car entry in the tracker.
         After processing all the frames, we save the GeoJSON data, image data, and other map data.
         """
-        
-        # Clear old image data
-        config = Config()
-
-        clear_directory(config.CAR_IMAGE_PATH)
-
-        cap = cv2.VideoCapture(config.VIDEO_PATH)
-
-        detector = YOLODetector(config.YOLO_MODEL_PATH, conf_threshold=self.confidence_threshold)
-
-        # Process video frames
-        while cap.isOpened():
-            ret, frame = cap.read()
+        while self.cap.isOpened():
+            ret, frame = self.cap.read()
             if not ret:  # If the frame is not read correctly, break the loop
                 break
 
-            frame_idx = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1
+            frame_idx = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1
             if frame_idx >= len(self.drone_data):
                 break  # Break the loop if we have processed all the drone data
 
             drone_info = self.drone_data[frame_idx]
             detections = detector.detect_objects(frame)
-            
+
             box_index = 0
             for box in detections:
                 if not box.id:
                     continue
 
-                car_id = int(box.id[0])
+                class_id = box.cls[0]
+                if class_id not in Config.INTERESTED_CLASS_IDS:
+                    continue  # Skip the class if it is not a vehicle
+
                 x1, y1, x2, y2 = box.xyxy[
                     0
                 ]  # Extracting the coordinates from the detection box (xyxy format)
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-                class_id = box.cls[0]
                 # Skip the detection if it is too close to the frame
-                if x1 < self.close_to_frame_pixels or y1 < self.close_to_frame_pixels or x2 > frame.shape[1] - self.close_to_frame_pixels or y2 > frame.shape[0] - self.close_to_frame_pixels:
+                if (
+                    x1 < Config.CLOSE_TO_FRAME_PIXELS
+                    or y1 < Config.CLOSE_TO_FRAME_PIXELS
+                    or x2 > frame.shape[1] - Config.CLOSE_TO_FRAME_PIXELS
+                    or y2 > frame.shape[0] - Config.CLOSE_TO_FRAME_PIXELS
+                ):
                     continue
 
-                if class_id not in self.interested_class_ids:
-                    continue  # Skip the class if it is not a vehicle
+                car_id = int(box.id[0])
 
                 if car_id and car_id not in self.car_ids:
-                    y1_pad = max(0, y1 - self.image_padding)
-                    y2_pad = min(frame.shape[0], y2 + self.image_padding)
-                    x1_pad = max(0, x1 - self.image_padding)
-                    x2_pad = min(frame.shape[1], x2 + self.image_padding)
-                    car_img = frame[y1_pad:y2_pad, x1_pad:x2_pad].copy()
+                    self.create_vehicle_entry(car_id, frame, x1, y1, x2, y2)
 
-                    # Save the image
-                    filename = f"{config.CAR_IMAGE_PATH}/vehicle_{car_id}.jpg"
-                    cv2.imwrite(filename, car_img)
-
-                    self.car_colors[car_id] = (
-                        np.random.randint(0, 255),
-                        np.random.randint(0, 255),
-                        np.random.randint(0, 255),
-                    )
-                    self.car_ids.append(car_id)
-                    
-                
                 lat, lon = self.map_to_coordinates(
                     (x1 + x2) // 2, (y1 + y2) // 2, frame_idx, drone_info
                 )
@@ -228,7 +264,9 @@ class CarTracker:
                     lon,
                     box.conf[0],
                     drone_info,
-                    delay= True if box_index == 0 else False, # add delay only to one point on the frame
+                    delay=True
+                    if box_index == 0
+                    else False,  # add delay only to one point on the frame
                 )
                 box_index += 1
 
@@ -238,12 +276,11 @@ class CarTracker:
                 self.car_geo_paths[car_id].append((lat, lon))
 
 
-        # Save the GeoJSON data
-        export_for_geo_json(self.car_geo_json_paths, config.GEOJSON_OUTPUT_PATH)
-
-        cap.release()  # Release the video capture object
-
-
 if __name__ == "__main__":
-    main = CarTracker()
-    main.run_recognition()
+    with CarTracker() as tracker:
+        detector = YOLODetector(
+            Config.YOLO_MODEL_PATH,
+            conf_threshold=Config.CONFIDENCE_THRESHOLD,
+            iou_threshold=Config.IOU_THRESHOLD,
+        )
+        tracker.run_recognition(detector)

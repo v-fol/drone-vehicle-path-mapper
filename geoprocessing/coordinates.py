@@ -1,13 +1,17 @@
 import math
 
 
-def adjust_lat_long_with_direction(lat, lon, displacement, direction_deg):
+def adjust_lat_long_with_direction(lat: float, lon: float, displacement: float, direction_deg: float) -> tuple:
     """
     Adjusts latitude and longitude by a displacement (in meters) in a specific direction.
-    Lat and Lon are in decimal degrees. Direction is in degrees relative to the compass.
     
-    displacement: The total displacement (in meters).
-    direction_deg: Direction in degrees relative to the compass (0° = North, 90° = East).
+    Args:
+        lat: Latitude (in decimal degrees).
+        lon: Longitude (in decimal degrees).
+        displacement: The total displacement (in meters).
+        direction_deg: Direction in degrees relative to the compass (0° = North, 90° = East).
+    Returns:
+        Tuple: Adjusted latitude and longitude (in decimal degrees).
     """
     
     # Convert the direction angle from degrees to radians

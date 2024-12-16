@@ -2,7 +2,16 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 
 
-def douglas_peucker(features, tolerance):
+def douglas_peucker(features: list, tolerance: float) -> list:
+    """
+    Simplifies a list of GeoJSON features representing a path using the Douglas-Peucker algorithm.
+
+    Args:
+        features (list of dict): List of GeoJSON feature dictionaries
+        tolerance (float): Maximum distance threshold for simplification
+    Returns:
+        list of dict: Simplified list of GeoJSON feature dictionaries
+    """
     if len(features) < 3:
         return features  # Cannot simplify further
 
@@ -42,7 +51,17 @@ def douglas_peucker(features, tolerance):
         return [start, end]  # No points to remove
 
 
-def douglas_peucker_path_simlification(features, simplification_threshold):
+def douglas_peucker_path_simlification(features: list, simplification_threshold: float) -> list:
+    """
+    Simplifies a list of GeoJSON features representing paths using the Douglas-Peucker algorithm.
+
+    Args:
+        features (list of dict): List of GeoJSON feature dictionaries
+        simplification_threshold (float): Maximum distance threshold for simplification
+    Returns:
+        list of dict: Simplified list of GeoJSON feature dictionaries
+
+    """
     simplified_features = []
     features_by_car_id = {}
     for feature in features:
@@ -58,7 +77,7 @@ def douglas_peucker_path_simlification(features, simplification_threshold):
     return simplified_features
 
 
-def remove_outliers_with_dbscan(features, eps=0.000001, min_samples=2):
+def remove_outliers_with_dbscan(features: list, eps: float, min_samples: int) -> list:
     """
     Removes outliers from a list of feature dictionaries using DBSCAN.
 
